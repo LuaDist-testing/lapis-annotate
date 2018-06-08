@@ -1,17 +1,17 @@
 -- This file was automatically generated for the LuaDist project.
 
 package = "lapis-annotate"
-version = "1.1.0-1"
+version = "1.2.0-1"
 
 -- LuaDist source
 source = {
-  tag = "1.1.0-1",
+  tag = "1.2.0-1",
   url = "git://github.com/LuaDist-testing/lapis-annotate.git"
 }
 -- Original source
 -- source = {
 --   url = "git://github.com/leafo/lapis-annotate.git",
--- 	tag = "v1.1.0"
+-- 	tag = "v1.2.0"
 -- }
 
 description = {
