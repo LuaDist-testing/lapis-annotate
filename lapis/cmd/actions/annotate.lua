@@ -1,5 +1,9 @@
 local default_environment
 default_environment = require("lapis.cmd.util").default_environment
+local shell_escape
+shell_escape = function(str)
+  return "'" .. tostring(str:gsub("'", "''")) .. "'"
+end
 local exec
 exec = function(cmd)
   local f = io.popen(cmd)
@@ -12,7 +16,30 @@ end
 local extract_header
 extract_header = function(config, model)
   local table_name = model:table_name()
-  local schema = exec("pg_dump --schema-only -U postgres -t " .. tostring(table_name) .. " " .. tostring(assert(config.postgres.database, "missing db")))
+  local database = assert(config.postgres.database, "missing db")
+  local command = { }
+  do
+    local password = config.postgres.password
+    if password then
+      table.insert(command, "PGPASSWORD=" .. tostring(shell_escape(password)))
+    end
+  end
+  table.insert(command, "pg_dump --schema-only")
+  do
+    local host = config.postgres.host
+    if host then
+      table.insert(command, "-h " .. tostring(shell_escape(host)))
+    end
+  end
+  do
+    local user = config.postgres.user
+    if user then
+      table.insert(command, "-U " .. tostring(shell_escape(user)))
+    end
+  end
+  table.insert(command, "-t " .. tostring(shell_escape(table_name)))
+  table.insert(command, shell_escape(database))
+  local schema = exec(table.concat(command, " "))
   local in_block = false
   local filtered
   do
@@ -113,7 +140,7 @@ return {
   name = "annotate",
   usage = "annotate models/model1.moon models/model2.moon ...",
   help = "annotate a model with schema",
-  function(flags, ...)
+  function(self, flags, ...)
     local args = {
       ...
     }

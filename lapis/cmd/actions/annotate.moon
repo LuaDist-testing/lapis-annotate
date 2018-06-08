@@ -1,5 +1,8 @@
 import default_environment from require "lapis.cmd.util"
 
+shell_escape = (str) ->
+  "'#{str\gsub "'", "''"}'"
+
 exec = (cmd) ->
   f = io.popen cmd
   with f\read("*all")\gsub "%s*$", ""
@@ -7,7 +10,25 @@ exec = (cmd) ->
 
 extract_header = (config, model) ->
   table_name = model\table_name!
-  schema = exec "pg_dump --schema-only -U postgres -t #{table_name} #{assert config.postgres.database, "missing db"}"
+  database = assert config.postgres.database, "missing db"
+
+  command = { }
+
+  if password = config.postgres.password
+    table.insert command, "PGPASSWORD=#{shell_escape password}"
+
+  table.insert command, "pg_dump --schema-only"
+
+  if host = config.postgres.host
+    table.insert command, "-h #{shell_escape host}"
+
+  if user = config.postgres.user
+    table.insert command, "-U #{shell_escape user}"
+
+  table.insert command, "-t #{shell_escape table_name}"
+  table.insert command, shell_escape database
+
+  schema = exec table.concat command, " "
 
   in_block = false
 
@@ -74,7 +95,7 @@ annotate_model = (config, fname) ->
   usage: "annotate models/model1.moon models/model2.moon ..."
   help: "annotate a model with schema"
 
-  (flags, ...) ->
+  (flags, ...) =>
     args = { ... }
     config = require("lapis.config").get!
 
